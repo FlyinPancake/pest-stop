@@ -1,0 +1,8 @@
+watchapp
+README.md
+.github
+*.svg
+mise.toml
+target
+Dockerfile
+compose.yaml
