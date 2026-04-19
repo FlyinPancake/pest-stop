@@ -1,4 +1,12 @@
-var BACKEND_URL = "http://127.0.0.1:3000";
+var Clay = require("./clay");
+var clayConfig = require("./config.json");
+var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
+
+var DEFAULT_SETTINGS = {
+  backend_url: "http://127.0.0.1:3000",
+  nearby_limit: 5,
+  departure_limit: 3
+};
 
 var CMD_REQUEST_DEPARTURES = 0;
 var CMD_DEPARTURE_DATA = 1;
@@ -6,19 +14,60 @@ var CMD_STATUS = 2;
 var CMD_REQUEST_NEARBY = 3;
 var CMD_NEARBY_DATA = 4;
 
+function getStoredSettings() {
+  var settings = {};
+
+  try {
+    settings = JSON.parse(localStorage.getItem("clay-settings")) || {};
+  } catch (e) {
+    console.log("Failed to parse Clay settings: " + e);
+  }
+
+  return settings;
+}
+
+function getSetting(key) {
+  var settings = getStoredSettings();
+  if (
+    settings[key] !== undefined &&
+    settings[key] !== null &&
+    settings[key] !== ""
+  ) {
+    return settings[key];
+  }
+  return DEFAULT_SETTINGS[key];
+}
+
+function getIntSetting(key, min, max) {
+  var value = parseInt(getSetting(key), 10);
+  if (isNaN(value)) value = DEFAULT_SETTINGS[key];
+  if (value < min) value = min;
+  if (value > max) value = max;
+  return value;
+}
+
+function getBackendUrl() {
+  var url = getSetting("backend_url");
+  return url.replace(/\/+$/, "");
+}
+
 function sendQueue(queue, index) {
   if (index >= queue.length) return;
 
-  Pebble.sendAppMessage(queue[index], function () {
-    sendQueue(queue, index + 1);
-  }, function () {
-    console.log("Failed to send message " + index);
-    Pebble.sendAppMessage(
-      { Command: CMD_STATUS, Status: "Send failed" },
-      null,
-      null
-    );
-  });
+  Pebble.sendAppMessage(
+    queue[index],
+    function () {
+      sendQueue(queue, index + 1);
+    },
+    function () {
+      console.log("Failed to send message " + index);
+      Pebble.sendAppMessage(
+        { Command: CMD_STATUS, Status: "Send failed" },
+        null,
+        null
+      );
+    }
+  );
 }
 
 function fetchNearby() {
@@ -28,60 +77,71 @@ function fetchNearby() {
     null
   );
 
-  navigator.geolocation.getCurrentPosition(function (pos) {
-    var lat = pos.coords.latitude;
-    var lon = pos.coords.longitude;
-    var url = BACKEND_URL + "/api/v1/stops/nearby?lat=" + lat + "&lon=" + lon + "&limit=5";
-    var req = new XMLHttpRequest();
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      var url =
+        getBackendUrl() +
+        "/api/v1/stops/nearby?lat=" +
+        lat +
+        "&lon=" +
+        lon +
+        "&limit=" +
+        getIntSetting("nearby_limit", 1, 5);
+      var req = new XMLHttpRequest();
 
-    req.onload = function () {
-      if (req.status === 200) {
-        var stops = JSON.parse(req.responseText);
-        var queue = [];
+      req.onload = function () {
+        if (req.status === 200) {
+          var stops = JSON.parse(req.responseText);
+          var queue = [];
 
-        queue.push({
-          Command: CMD_NEARBY_DATA,
-          Count: stops.length,
-        });
-
-        for (var i = 0; i < stops.length; i++) {
           queue.push({
             Command: CMD_NEARBY_DATA,
-            Index: i,
-            StopId: stops[i].id,
-            StopName: stops[i].name,
-            Distance: stops[i].distance_m,
+            Count: stops.length
           });
-        }
 
-        queue.push({ Command: CMD_STATUS, Status: "OK" });
-        sendQueue(queue, 0);
-      } else {
+          for (var i = 0; i < stops.length; i++) {
+            queue.push({
+              Command: CMD_NEARBY_DATA,
+              Index: i,
+              StopId: stops[i].id,
+              StopName: stops[i].name,
+              Distance: stops[i].distance_m
+            });
+          }
+
+          queue.push({ Command: CMD_STATUS, Status: "OK" });
+          sendQueue(queue, 0);
+        } else {
+          Pebble.sendAppMessage(
+            { Command: CMD_STATUS, Status: "Error " + req.status },
+            null,
+            null
+          );
+        }
+      };
+
+      req.onerror = function () {
         Pebble.sendAppMessage(
-          { Command: CMD_STATUS, Status: "Error " + req.status },
+          { Command: CMD_STATUS, Status: "Network error" },
           null,
           null
         );
-      }
-    };
+      };
 
-    req.onerror = function () {
+      req.open("GET", url);
+      req.send();
+    },
+    function (err) {
       Pebble.sendAppMessage(
-        { Command: CMD_STATUS, Status: "Network error" },
+        { Command: CMD_STATUS, Status: "Location error" },
         null,
         null
       );
-    };
-
-    req.open("GET", url);
-    req.send();
-  }, function (err) {
-    Pebble.sendAppMessage(
-      { Command: CMD_STATUS, Status: "Location error" },
-      null,
-      null
-    );
-  }, { timeout: 15000, maximumAge: 60000 });
+    },
+    { timeout: 15000, maximumAge: 60000 }
+  );
 }
 
 function fetchDepartures(stopId) {
@@ -91,7 +151,12 @@ function fetchDepartures(stopId) {
     null
   );
 
-  var url = BACKEND_URL + "/api/v1/stops/" + stopId + "/departures?limit=3";
+  var url =
+    getBackendUrl() +
+    "/api/v1/stops/" +
+    encodeURIComponent(stopId) +
+    "/departures?limit=" +
+    getIntSetting("departure_limit", 1, 3);
   var req = new XMLHttpRequest();
 
   req.onload = function () {
@@ -103,7 +168,7 @@ function fetchDepartures(stopId) {
       queue.push({
         Command: CMD_DEPARTURE_DATA,
         StopName: data.stop.name,
-        Count: departures.length,
+        Count: departures.length
       });
 
       for (var i = 0; i < departures.length; i++) {
@@ -112,7 +177,7 @@ function fetchDepartures(stopId) {
           Index: i,
           Route: departures[i].route_short_name,
           Headsign: departures[i].headsign,
-          Minutes: departures[i].minutes,
+          Minutes: departures[i].minutes
         });
       }
 
@@ -142,6 +207,23 @@ function fetchDepartures(stopId) {
 Pebble.addEventListener("ready", function () {
   console.log("Pest Stop pkjs ready");
   fetchNearby();
+});
+
+Pebble.addEventListener("showConfiguration", function () {
+  Pebble.openURL(clay.generateUrl());
+});
+
+Pebble.addEventListener("webviewclosed", function (e) {
+  if (!e || !e.response || e.response === "CANCELLED") {
+    return;
+  }
+
+  try {
+    clay.getSettings(e.response, false);
+    fetchNearby();
+  } catch (err) {
+    console.log("Failed to save config: " + err);
+  }
 });
 
 Pebble.addEventListener("appmessage", function (e) {

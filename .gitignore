@@ -7,3 +7,6 @@ zig-out/
 # watchapp
 watchapp/build/
 watchapp/.lock-waf_*
+
+# backend datasource cache
+backend/data/

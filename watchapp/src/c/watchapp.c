@@ -74,7 +74,7 @@ static void refresh_dep_menu(void)
 
   if (s_dep_menu_layer)
   {
-    layer_mark_dirty(simple_menu_layer_get_layer(s_dep_menu_layer));
+    menu_layer_reload_data(simple_menu_layer_get_menu_layer(s_dep_menu_layer));
   }
 }
 
@@ -162,7 +162,7 @@ static void refresh_stops_menu(void)
 
   if (s_stops_menu_layer)
   {
-    layer_mark_dirty(simple_menu_layer_get_layer(s_stops_menu_layer));
+    menu_layer_reload_data(simple_menu_layer_get_menu_layer(s_stops_menu_layer));
   }
 }
 

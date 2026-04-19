@@ -1,0 +1,64 @@
+[
+  {
+    "type": "heading",
+    "defaultValue": "Pest Stop",
+    "size": 1
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Backend"
+      },
+      {
+        "type": "input",
+        "messageKey": "backend_url",
+        "label": "Backend URL",
+        "defaultValue": "http://127.0.0.1:3000",
+        "description": "Base URL for the Pest Stop backend.",
+        "attributes": {
+          "placeholder": "http://192.168.1.10:3000",
+          "type": "url"
+        }
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Results"
+      },
+      {
+        "type": "select",
+        "messageKey": "nearby_limit",
+        "label": "Nearby stops",
+        "defaultValue": "5",
+        "options": [
+          { "label": "1 stop", "value": "1" },
+          { "label": "2 stops", "value": "2" },
+          { "label": "3 stops", "value": "3" },
+          { "label": "4 stops", "value": "4" },
+          { "label": "5 stops", "value": "5" }
+        ]
+      },
+      {
+        "type": "select",
+        "messageKey": "departure_limit",
+        "label": "Departures per stop",
+        "defaultValue": "3",
+        "options": [
+          { "label": "1 departure", "value": "1" },
+          { "label": "2 departures", "value": "2" },
+          { "label": "3 departures", "value": "3" }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "submit",
+    "defaultValue": "Save"
+  }
+]

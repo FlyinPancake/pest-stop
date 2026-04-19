@@ -36,7 +36,8 @@
       "Distance": 9
     },
     "capabilities": [
-      "location"
+      "location",
+      "configurable"
     ],
     "resources": {
       "media": []
