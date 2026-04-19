@@ -1,0 +1,9 @@
+target/
+.zig-cache/
+zig-out/
+.DS_Store
+.env
+
+# watchapp
+watchapp/build/
+watchapp/.lock-waf_*

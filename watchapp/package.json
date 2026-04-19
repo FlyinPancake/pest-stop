@@ -1,0 +1,45 @@
+{
+  "name": "pest-stop",
+  "author": "flyinpancake",
+  "version": "0.0.1",
+  "keywords": [
+    "pebble-app"
+  ],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Pest Stop",
+    "uuid": "14bb49c5-6c7d-411b-9e51-c4a0af99fcb4",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint",
+      "gabbro"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "messageKeys": {
+      "Command": 0,
+      "StopId": 1,
+      "StopName": 2,
+      "Index": 3,
+      "Count": 4,
+      "Route": 5,
+      "Headsign": 6,
+      "Minutes": 7,
+      "Status": 8,
+      "Distance": 9
+    },
+    "capabilities": [
+      "location"
+    ],
+    "resources": {
+      "media": []
+    }
+  }
+}
