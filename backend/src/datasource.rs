@@ -122,12 +122,14 @@ impl GtfsData {
                 }
 
                 let route = self.consumer.route(trip.route_idx);
+                let route_id = self.consumer.route_id(route.id);
                 let route_short_name = route
                     .short_name
                     .get()
                     .or_else(|| route.long_name.get())
                     .map(|name| self.consumer.string(name).to_string())
                     .unwrap_or_else(|| self.consumer.route_id(route.id).to_string());
+                let mode = route_mode_name(route_id, &route_short_name).to_string();
                 let headsign = stop_time
                     .headsign
                     .get()
@@ -139,6 +141,7 @@ impl GtfsData {
                 Some((
                     time.0,
                     Departure {
+                        mode,
                         route_short_name,
                         headsign,
                         scheduled_time: format_gtfs_time(time),
@@ -154,6 +157,31 @@ impl GtfsData {
             .map(|(_, departure)| departure)
             .collect()
     }
+}
+
+fn route_mode_name(route_id: &str, route_short_name: &str) -> &'static str {
+    if route_id.starts_with('H') || route_short_name.starts_with('H') {
+        return "suburban-railway";
+    }
+
+    if let Ok(numeric_route_id) = route_id.parse::<u32>() {
+        if (4700..4900).contains(&numeric_route_id) {
+            return "trolleybus";
+        }
+        if (5100..5500).contains(&numeric_route_id) {
+            return "subway";
+        }
+        if (3000..4000).contains(&numeric_route_id) {
+            return "tram";
+        }
+        return "bus";
+    }
+
+    if route_short_name.starts_with('M') {
+        return "subway";
+    }
+
+    "bus"
 }
 
 pub fn load() -> Result<(String, Arc<GtfsData>), DynError> {

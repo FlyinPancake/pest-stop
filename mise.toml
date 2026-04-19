@@ -1,7 +1,6 @@
 experimental_monorepo_root = true
 [tools]
-"pipx:pebble-tool" = {"version" = "latest", uvx = true, uvx_args = "--python 3.13"}
-"cargo:cargo-shuttle" = "latest"
+"pipx:pebble-tool" = { "version" = "latest", uvx = true, uvx_args = "--python 3.13" }
 
 [monorepo]
 config_roots = ["watchapp/"]

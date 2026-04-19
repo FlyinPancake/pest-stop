@@ -33,14 +33,52 @@
       "Headsign": 6,
       "Minutes": 7,
       "Status": 8,
-      "Distance": 9
+      "Distance": 9,
+      "Mode": 10
     },
     "capabilities": [
       "location",
       "configurable"
     ],
     "resources": {
-      "media": []
+      "media": [
+        {
+          "type": "png",
+          "name": "IMAGE_MENU_ICON",
+          "file": "icons/menu-icon.png",
+          "menuIcon": true
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_MODE_TRAM",
+          "file": "icons/tram.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_MODE_RAIL",
+          "file": "icons/rail.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_MODE_BUS",
+          "file": "icons/bus.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_MODE_TROLLEYBUS",
+          "file": "icons/trolleybus.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_MODE_SUBURBAN_RAILWAY",
+          "file": "icons/suburban-railway.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_MODE_SUBWAY",
+          "file": "icons/subway.png"
+        }
+      ]
     }
   }
 }

@@ -38,10 +38,10 @@
         "defaultValue": "5",
         "options": [
           { "label": "1 stop", "value": "1" },
-          { "label": "2 stops", "value": "2" },
           { "label": "3 stops", "value": "3" },
-          { "label": "4 stops", "value": "4" },
-          { "label": "5 stops", "value": "5" }
+          { "label": "5 stops", "value": "5" },
+          { "label": "10 stops", "value": "10" },
+          { "label": "20 stops", "value": "20" }
         ]
       },
       {

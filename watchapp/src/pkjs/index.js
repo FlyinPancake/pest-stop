@@ -88,7 +88,7 @@ function fetchNearby() {
         "&lon=" +
         lon +
         "&limit=" +
-        getIntSetting("nearby_limit", 1, 5);
+        getIntSetting("nearby_limit", 1, 20);
       var req = new XMLHttpRequest();
 
       req.onload = function () {
@@ -171,15 +171,16 @@ function fetchDepartures(stopId) {
         Count: departures.length
       });
 
-      for (var i = 0; i < departures.length; i++) {
-        queue.push({
-          Command: CMD_DEPARTURE_DATA,
-          Index: i,
-          Route: departures[i].route_short_name,
-          Headsign: departures[i].headsign,
-          Minutes: departures[i].minutes
-        });
-      }
+        for (var i = 0; i < departures.length; i++) {
+          queue.push({
+            Command: CMD_DEPARTURE_DATA,
+            Index: i,
+            Mode: departures[i].mode,
+            Route: departures[i].route_short_name,
+            Headsign: departures[i].headsign,
+            Minutes: departures[i].minutes
+          });
+        }
 
       queue.push({ Command: CMD_STATUS, Status: "OK" });
       sendQueue(queue, 0);

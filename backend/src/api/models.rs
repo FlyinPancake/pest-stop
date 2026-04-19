@@ -11,6 +11,7 @@ pub struct Stop {
 
 #[derive(Clone, Serialize, ToSchema)]
 pub struct Departure {
+    pub mode: String,
     pub route_short_name: String,
     pub headsign: String,
     pub scheduled_time: String,

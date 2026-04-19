@@ -7,7 +7,7 @@
 #define CMD_REQUEST_NEARBY 3
 #define CMD_NEARBY_DATA 4
 
-#define MAX_STOPS 5
+#define MAX_STOPS 20
 #define MAX_DEPARTURES 3
 #define BUF_LEN 32
 #define ACCENT_COLOR GColorImperialPurple
@@ -34,6 +34,7 @@ static TextLayer *s_dep_status_layer;
 static SimpleMenuLayer *s_dep_menu_layer;
 
 static char s_dep_stop_name[BUF_LEN] = "";
+static char s_dep_modes[MAX_DEPARTURES][BUF_LEN];
 static char s_dep_titles[MAX_DEPARTURES][BUF_LEN];
 static char s_dep_subtitles[MAX_DEPARTURES][BUF_LEN];
 static int s_dep_count = 0;
@@ -48,6 +49,13 @@ static char s_status_text[BUF_LEN] = "Connecting";
 static GRect s_stops_bounds;
 static GRect s_dep_bounds;
 
+static GBitmap *s_mode_icon_tram;
+static GBitmap *s_mode_icon_rail;
+static GBitmap *s_mode_icon_bus;
+static GBitmap *s_mode_icon_trolleybus;
+static GBitmap *s_mode_icon_suburban_railway;
+static GBitmap *s_mode_icon_subway;
+
 // --- Helpers ---
 
 static void configure_text_layer(TextLayer *layer, GColor color,
@@ -60,6 +68,21 @@ static void configure_text_layer(TextLayer *layer, GColor color,
   text_layer_set_font(layer, fonts_get_system_font(font_key));
 }
 
+static GBitmap *mode_icon_for_name(const char *mode)
+{
+  if (strcmp(mode, "tram") == 0)
+    return s_mode_icon_tram;
+  if (strcmp(mode, "rail") == 0)
+    return s_mode_icon_rail;
+  if (strcmp(mode, "trolleybus") == 0)
+    return s_mode_icon_trolleybus;
+  if (strcmp(mode, "suburban-railway") == 0)
+    return s_mode_icon_suburban_railway;
+  if (strcmp(mode, "subway") == 0)
+    return s_mode_icon_subway;
+  return s_mode_icon_bus;
+}
+
 // --- Departures window ---
 
 static void refresh_dep_menu(void)
@@ -68,6 +91,7 @@ static void refresh_dep_menu(void)
   {
     s_dep_items[i].title = s_dep_titles[i];
     s_dep_items[i].subtitle = s_dep_subtitles[i];
+    s_dep_items[i].icon = mode_icon_for_name(s_dep_modes[i]);
   }
   s_dep_sections[0].items = s_dep_items;
   s_dep_sections[0].num_items = s_dep_count;
@@ -305,6 +329,16 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context)
         Tuple *route = dict_find(iter, MESSAGE_KEY_Route);
         Tuple *minutes = dict_find(iter, MESSAGE_KEY_Minutes);
         Tuple *headsign = dict_find(iter, MESSAGE_KEY_Headsign);
+        Tuple *mode = dict_find(iter, MESSAGE_KEY_Mode);
+
+        if (mode)
+        {
+          strncpy(s_dep_modes[idx], mode->value->cstring, BUF_LEN - 1);
+        }
+        else
+        {
+          strncpy(s_dep_modes[idx], "bus", BUF_LEN - 1);
+        }
 
         if (route && minutes)
         {
@@ -346,10 +380,19 @@ static void outbox_failed_handler(DictionaryIterator *iter,
 
 static void init(void)
 {
+  s_mode_icon_tram = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_TRAM);
+  s_mode_icon_rail = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_RAIL);
+  s_mode_icon_bus = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_BUS);
+  s_mode_icon_trolleybus =
+      gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_TROLLEYBUS);
+  s_mode_icon_suburban_railway =
+      gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_SUBURBAN_RAILWAY);
+  s_mode_icon_subway = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_SUBWAY);
+
   app_message_register_inbox_received(inbox_received_handler);
   app_message_register_inbox_dropped(inbox_dropped_handler);
   app_message_register_outbox_failed(outbox_failed_handler);
-  app_message_open(256, 128);
+  app_message_open(384, 128);
 
   s_stops_window = window_create();
   window_set_window_handlers(s_stops_window, (WindowHandlers){
@@ -359,7 +402,16 @@ static void init(void)
   window_stack_push(s_stops_window, true);
 }
 
-static void deinit(void) { window_destroy(s_stops_window); }
+static void deinit(void)
+{
+  window_destroy(s_stops_window);
+  gbitmap_destroy(s_mode_icon_tram);
+  gbitmap_destroy(s_mode_icon_rail);
+  gbitmap_destroy(s_mode_icon_bus);
+  gbitmap_destroy(s_mode_icon_trolleybus);
+  gbitmap_destroy(s_mode_icon_suburban_railway);
+  gbitmap_destroy(s_mode_icon_subway);
+}
 
 int main(void)
 {

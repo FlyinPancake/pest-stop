@@ -70,7 +70,7 @@ pub async fn search_stops(
     Json(StopSearchResponse { query, stops })
 }
 
-#[derive(Deserialize, IntoParams)]
+#[derive(Deserialize, IntoParams, Debug)]
 #[into_params(parameter_in = Query)]
 pub struct NearbyParams {
     lat: f64,
@@ -94,6 +94,7 @@ pub struct NearbyStop {
         (status = 200, description = "Nearby stops ordered by distance.", body = [NearbyStop])
     )
 )]
+#[tracing::instrument(skip(state))]
 pub async fn nearby_stops(
     State(state): State<AppState>,
     Query(params): Query<NearbyParams>,
