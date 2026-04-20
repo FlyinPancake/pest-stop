@@ -3,16 +3,16 @@ var clayConfig = require("./config.json");
 var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 
 var DEFAULT_SETTINGS = {
-  backend_url: "http://127.0.0.1:3000",
+  backend_url: "https://pest.hoth.froggo.boo",
   nearby_limit: 5,
   departure_limit: 3
 };
 
-var CMD_REQUEST_DEPARTURES = 0;
-var CMD_DEPARTURE_DATA = 1;
-var CMD_STATUS = 2;
-var CMD_REQUEST_NEARBY = 3;
-var CMD_NEARBY_DATA = 4;
+const CMD_REQUEST_DEPARTURES = 0;
+const CMD_DEPARTURE_DATA = 1;
+const CMD_STATUS = 2;
+const CMD_REQUEST_NEARBY = 3;
+const CMD_NEARBY_DATA = 4;
 
 function getStoredSettings() {
   var settings = {};
@@ -28,11 +28,7 @@ function getStoredSettings() {
 
 function getSetting(key) {
   var settings = getStoredSettings();
-  if (
-    settings[key] !== undefined &&
-    settings[key] !== null &&
-    settings[key] !== ""
-  ) {
+  if (settings[key] !== undefined && settings[key] !== null && settings[key] !== "") {
     return settings[key];
   }
   return DEFAULT_SETTINGS[key];
@@ -61,21 +57,13 @@ function sendQueue(queue, index) {
     },
     function () {
       console.log("Failed to send message " + index);
-      Pebble.sendAppMessage(
-        { Command: CMD_STATUS, Status: "Send failed" },
-        null,
-        null
-      );
+      Pebble.sendAppMessage({ Command: CMD_STATUS, Status: "Send failed" }, null, null);
     }
   );
 }
 
 function fetchNearby() {
-  Pebble.sendAppMessage(
-    { Command: CMD_STATUS, Status: "Getting location..." },
-    null,
-    null
-  );
+  Pebble.sendAppMessage({ Command: CMD_STATUS, Status: "Getting location..." }, null, null);
 
   navigator.geolocation.getCurrentPosition(
     function (pos) {
@@ -114,42 +102,27 @@ function fetchNearby() {
           queue.push({ Command: CMD_STATUS, Status: "OK" });
           sendQueue(queue, 0);
         } else {
-          Pebble.sendAppMessage(
-            { Command: CMD_STATUS, Status: "Error " + req.status },
-            null,
-            null
-          );
+          Pebble.sendAppMessage({ Command: CMD_STATUS, Status: "Error " + req.status }, null, null);
         }
       };
 
       req.onerror = function () {
-        Pebble.sendAppMessage(
-          { Command: CMD_STATUS, Status: "Network error" },
-          null,
-          null
-        );
+        Pebble.sendAppMessage({ Command: CMD_STATUS, Status: "Network error" }, null, null);
       };
 
       req.open("GET", url);
       req.send();
     },
     function (err) {
-      Pebble.sendAppMessage(
-        { Command: CMD_STATUS, Status: "Location error" },
-        null,
-        null
-      );
+      console.log("Location error: " + err.message);
+      Pebble.sendAppMessage({ Command: CMD_STATUS, Status: "Location error" }, null, null);
     },
     { timeout: 15000, maximumAge: 60000 }
   );
 }
 
 function fetchDepartures(stopId) {
-  Pebble.sendAppMessage(
-    { Command: CMD_STATUS, Status: "Loading..." },
-    null,
-    null
-  );
+  Pebble.sendAppMessage({ Command: CMD_STATUS, Status: "Loading..." }, null, null);
 
   var url =
     getBackendUrl() +
@@ -171,34 +144,26 @@ function fetchDepartures(stopId) {
         Count: departures.length
       });
 
-        for (var i = 0; i < departures.length; i++) {
-          queue.push({
-            Command: CMD_DEPARTURE_DATA,
-            Index: i,
-            Mode: departures[i].mode,
-            Route: departures[i].route_short_name,
-            Headsign: departures[i].headsign,
-            Minutes: departures[i].minutes
-          });
-        }
+      for (var i = 0; i < departures.length; i++) {
+        queue.push({
+          Command: CMD_DEPARTURE_DATA,
+          Index: i,
+          Mode: departures[i].mode,
+          Route: departures[i].route_short_name,
+          Headsign: departures[i].headsign,
+          Minutes: departures[i].minutes
+        });
+      }
 
       queue.push({ Command: CMD_STATUS, Status: "OK" });
       sendQueue(queue, 0);
     } else {
-      Pebble.sendAppMessage(
-        { Command: CMD_STATUS, Status: "Error " + req.status },
-        null,
-        null
-      );
+      Pebble.sendAppMessage({ Command: CMD_STATUS, Status: "Error " + req.status }, null, null);
     }
   };
 
   req.onerror = function () {
-    Pebble.sendAppMessage(
-      { Command: CMD_STATUS, Status: "Network error" },
-      null,
-      null
-    );
+    Pebble.sendAppMessage({ Command: CMD_STATUS, Status: "Network error" }, null, null);
   };
 
   req.open("GET", url);

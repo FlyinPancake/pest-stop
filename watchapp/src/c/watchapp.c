@@ -60,16 +60,14 @@ static GBitmap *s_mode_icon_subway;
 
 static void configure_text_layer(TextLayer *layer, GColor color,
                                  GTextAlignment alignment,
-                                 const char *font_key)
-{
+                                 const char *font_key) {
   text_layer_set_background_color(layer, GColorClear);
   text_layer_set_text_color(layer, color);
   text_layer_set_text_alignment(layer, alignment);
   text_layer_set_font(layer, fonts_get_system_font(font_key));
 }
 
-static GBitmap *mode_icon_for_name(const char *mode)
-{
+static GBitmap *mode_icon_for_name(const char *mode) {
   if (strcmp(mode, "tram") == 0)
     return s_mode_icon_tram;
   if (strcmp(mode, "rail") == 0)
@@ -85,10 +83,8 @@ static GBitmap *mode_icon_for_name(const char *mode)
 
 // --- Departures window ---
 
-static void refresh_dep_menu(void)
-{
-  for (int i = 0; i < s_dep_count; i++)
-  {
+static void refresh_dep_menu(void) {
+  for (int i = 0; i < s_dep_count; i++) {
     s_dep_items[i].title = s_dep_titles[i];
     s_dep_items[i].subtitle = s_dep_subtitles[i];
     s_dep_items[i].icon = mode_icon_for_name(s_dep_modes[i]);
@@ -96,14 +92,12 @@ static void refresh_dep_menu(void)
   s_dep_sections[0].items = s_dep_items;
   s_dep_sections[0].num_items = s_dep_count;
 
-  if (s_dep_menu_layer)
-  {
+  if (s_dep_menu_layer) {
     menu_layer_reload_data(simple_menu_layer_get_menu_layer(s_dep_menu_layer));
   }
 }
 
-static void dep_window_load(Window *window)
-{
+static void dep_window_load(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(root);
   s_dep_bounds = bounds;
@@ -130,8 +124,7 @@ static void dep_window_load(Window *window)
   layer_add_child(root, text_layer_get_layer(s_dep_status_layer));
 }
 
-static void dep_window_unload(Window *window)
-{
+static void dep_window_unload(Window *window) {
   (void)window;
   text_layer_destroy(s_dep_title_layer);
   simple_menu_layer_destroy(s_dep_menu_layer);
@@ -143,8 +136,7 @@ static void dep_window_unload(Window *window)
 
 // --- Stops window ---
 
-static void stop_select_callback(int index, void *context)
-{
+static void stop_select_callback(int index, void *context) {
   (void)context;
   if (index < 0 || index >= s_stop_count)
     return;
@@ -173,10 +165,8 @@ static void stop_select_callback(int index, void *context)
   app_message_outbox_send();
 }
 
-static void refresh_stops_menu(void)
-{
-  for (int i = 0; i < s_stop_count; i++)
-  {
+static void refresh_stops_menu(void) {
+  for (int i = 0; i < s_stop_count; i++) {
     s_stop_items[i].title = s_stop_titles[i];
     s_stop_items[i].subtitle = s_stop_subtitles[i];
     s_stop_items[i].callback = stop_select_callback;
@@ -184,14 +174,13 @@ static void refresh_stops_menu(void)
   s_stop_sections[0].items = s_stop_items;
   s_stop_sections[0].num_items = s_stop_count;
 
-  if (s_stops_menu_layer)
-  {
-    menu_layer_reload_data(simple_menu_layer_get_menu_layer(s_stops_menu_layer));
+  if (s_stops_menu_layer) {
+    menu_layer_reload_data(
+        simple_menu_layer_get_menu_layer(s_stops_menu_layer));
   }
 }
 
-static void stops_window_load(Window *window)
-{
+static void stops_window_load(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(root);
   s_stops_bounds = bounds;
@@ -212,8 +201,7 @@ static void stops_window_load(Window *window)
   layer_add_child(root, text_layer_get_layer(s_stops_status_layer));
 }
 
-static void stops_window_unload(Window *window)
-{
+static void stops_window_unload(Window *window) {
   (void)window;
   simple_menu_layer_destroy(s_stops_menu_layer);
   text_layer_destroy(s_stops_status_layer);
@@ -223,31 +211,26 @@ static void stops_window_unload(Window *window)
 
 // --- AppMessage handlers ---
 
-static void update_status(const char *text)
-{
+static void update_status(const char *text) {
   bool hide = (strcmp(text, "OK") == 0);
   strncpy(s_status_text, text, BUF_LEN - 1);
 
-  if (s_stops_status_layer)
-  {
+  if (s_stops_status_layer) {
     layer_set_hidden(text_layer_get_layer(s_stops_status_layer), hide);
     text_layer_set_text(s_stops_status_layer, s_status_text);
   }
-  if (s_stops_menu_layer)
-  {
+  if (s_stops_menu_layer) {
     Layer *ml = simple_menu_layer_get_layer(s_stops_menu_layer);
     GRect frame = layer_get_frame(ml);
     frame.size.h = hide ? s_stops_bounds.size.h : s_stops_bounds.size.h - 24;
     layer_set_frame(ml, frame);
   }
 
-  if (s_dep_status_layer)
-  {
+  if (s_dep_status_layer) {
     layer_set_hidden(text_layer_get_layer(s_dep_status_layer), hide);
     text_layer_set_text(s_dep_status_layer, s_status_text);
   }
-  if (s_dep_menu_layer)
-  {
+  if (s_dep_menu_layer) {
     Layer *ml = simple_menu_layer_get_layer(s_dep_menu_layer);
     GRect frame = layer_get_frame(ml);
     frame.size.h =
@@ -256,44 +239,37 @@ static void update_status(const char *text)
   }
 }
 
-static void inbox_received_handler(DictionaryIterator *iter, void *context)
-{
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *cmd_tuple = dict_find(iter, MESSAGE_KEY_Command);
   if (!cmd_tuple)
     return;
 
   int cmd = cmd_tuple->value->int32;
 
-  if (cmd == CMD_NEARBY_DATA)
-  {
+  switch (cmd) {
+  case CMD_NEARBY_DATA: {
     Tuple *count_tuple = dict_find(iter, MESSAGE_KEY_Count);
-    if (count_tuple)
-    {
+    if (count_tuple) {
       s_stop_count = count_tuple->value->int32;
       if (s_stop_count > MAX_STOPS)
         s_stop_count = MAX_STOPS;
     }
 
     Tuple *index_tuple = dict_find(iter, MESSAGE_KEY_Index);
-    if (index_tuple)
-    {
+    if (index_tuple) {
       int idx = index_tuple->value->int32;
-      if (idx >= 0 && idx < MAX_STOPS)
-      {
+      if (idx >= 0 && idx < MAX_STOPS) {
         Tuple *id = dict_find(iter, MESSAGE_KEY_StopId);
         Tuple *name = dict_find(iter, MESSAGE_KEY_StopName);
         Tuple *dist = dict_find(iter, MESSAGE_KEY_Distance);
 
-        if (id)
-        {
+        if (id) {
           strncpy(s_stop_ids[idx], id->value->cstring, BUF_LEN - 1);
         }
-        if (name)
-        {
+        if (name) {
           strncpy(s_stop_titles[idx], name->value->cstring, BUF_LEN - 1);
         }
-        if (dist)
-        {
+        if (dist) {
           snprintf(s_stop_subtitles[idx], BUF_LEN, "%dm away",
                    (int)dist->value->int32);
         }
@@ -301,85 +277,71 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context)
         refresh_stops_menu();
       }
     }
-  }
-  else if (cmd == CMD_DEPARTURE_DATA)
-  {
+  } break;
+  case CMD_DEPARTURE_DATA: {
     Tuple *name_tuple = dict_find(iter, MESSAGE_KEY_StopName);
-    if (name_tuple)
-    {
+    if (name_tuple) {
       strncpy(s_dep_stop_name, name_tuple->value->cstring, BUF_LEN - 1);
       if (s_dep_title_layer)
         text_layer_set_text(s_dep_title_layer, s_dep_stop_name);
     }
 
     Tuple *count_tuple = dict_find(iter, MESSAGE_KEY_Count);
-    if (count_tuple)
-    {
+    if (count_tuple) {
       s_dep_count = count_tuple->value->int32;
       if (s_dep_count > MAX_DEPARTURES)
         s_dep_count = MAX_DEPARTURES;
     }
 
     Tuple *index_tuple = dict_find(iter, MESSAGE_KEY_Index);
-    if (index_tuple)
-    {
+    if (index_tuple) {
       int idx = index_tuple->value->int32;
-      if (idx >= 0 && idx < MAX_DEPARTURES)
-      {
+      if (idx >= 0 && idx < MAX_DEPARTURES) {
         Tuple *route = dict_find(iter, MESSAGE_KEY_Route);
         Tuple *minutes = dict_find(iter, MESSAGE_KEY_Minutes);
         Tuple *headsign = dict_find(iter, MESSAGE_KEY_Headsign);
         Tuple *mode = dict_find(iter, MESSAGE_KEY_Mode);
 
-        if (mode)
-        {
+        if (mode) {
           strncpy(s_dep_modes[idx], mode->value->cstring, BUF_LEN - 1);
-        }
-        else
-        {
+        } else {
           strncpy(s_dep_modes[idx], "bus", BUF_LEN - 1);
         }
 
-        if (route && minutes)
-        {
+        if (route && minutes) {
           snprintf(s_dep_titles[idx], BUF_LEN, "%s %dm", route->value->cstring,
                    (int)minutes->value->int32);
         }
-        if (headsign)
-        {
+        if (headsign) {
           strncpy(s_dep_subtitles[idx], headsign->value->cstring, BUF_LEN - 1);
         }
 
         refresh_dep_menu();
       }
     }
-  }
-  else if (cmd == CMD_STATUS)
-  {
+  } break;
+  case CMD_STATUS: {
     Tuple *status_tuple = dict_find(iter, MESSAGE_KEY_Status);
-    if (status_tuple)
-    {
+    if (status_tuple) {
       update_status(status_tuple->value->cstring);
     }
+  } break;
   }
 }
 
-static void inbox_dropped_handler(AppMessageResult reason, void *context)
-{
+static void inbox_dropped_handler(AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped: %d", reason);
   update_status("Msg dropped");
 }
 
 static void outbox_failed_handler(DictionaryIterator *iter,
-                                  AppMessageResult reason, void *context)
-{
+                                  AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed: %d", reason);
 }
 
 // --- Lifecycle ---
 
-static void init(void)
-{
+static void init(void) {
   s_mode_icon_tram = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_TRAM);
   s_mode_icon_rail = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_RAIL);
   s_mode_icon_bus = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_BUS);
@@ -387,7 +349,8 @@ static void init(void)
       gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_TROLLEYBUS);
   s_mode_icon_suburban_railway =
       gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_SUBURBAN_RAILWAY);
-  s_mode_icon_subway = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_SUBWAY);
+  s_mode_icon_subway =
+      gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MODE_SUBWAY);
 
   app_message_register_inbox_received(inbox_received_handler);
   app_message_register_inbox_dropped(inbox_dropped_handler);
@@ -402,8 +365,7 @@ static void init(void)
   window_stack_push(s_stops_window, true);
 }
 
-static void deinit(void)
-{
+static void deinit(void) {
   window_destroy(s_stops_window);
   gbitmap_destroy(s_mode_icon_tram);
   gbitmap_destroy(s_mode_icon_rail);
@@ -413,8 +375,7 @@ static void deinit(void)
   gbitmap_destroy(s_mode_icon_subway);
 }
 
-int main(void)
-{
+int main(void) {
   init();
   app_event_loop();
   deinit();

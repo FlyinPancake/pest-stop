@@ -10,3 +10,4 @@ watchapp/.lock-waf_*
 
 # backend datasource cache
 backend/data/
+watchapp/compile_commands.json

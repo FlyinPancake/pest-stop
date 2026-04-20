@@ -11,12 +11,12 @@
         "type": "heading",
         "defaultValue": "Backend"
       },
-      {
-        "type": "input",
-        "messageKey": "backend_url",
-        "label": "Backend URL",
-        "defaultValue": "http://127.0.0.1:3000",
-        "description": "Base URL for the Pest Stop backend.",
+        {
+          "type": "input",
+          "messageKey": "backend_url",
+          "label": "Backend URL",
+          "defaultValue": "https://pest.hoth.froggo.boo",
+          "description": "Base URL for the Pest Stop backend.",
         "attributes": {
           "placeholder": "http://192.168.1.10:3000",
           "type": "url"

@@ -1,5 +1,39 @@
 [tasks.build]
 run = "pebble build"
+alias = "b"
 
 [tasks.install]
 run = "pebble install --logs build/watchapp.pbw"
+alias = "i"
+
+[tasks.setup-clangd]
+usage = """
+arg "[platform]" help="The platform to generate the compile_commands.json for" default="emery" {
+    choices "basalt" "chalk" "diorite" "emery" "flint" "gabbro"
+}
+"""
+run = """
+#!/usr/bin/env bash
+
+includePath="$(pebble sdk include-path "{{ usage.platform }}")"
+includePath=${includePath%/SDKs*}
+platformIncludes="$includePath/SDKs/current/sdk-core/pebble/{{ usage.platform }}/include"
+armIncludes="$includePath/SDKs/current/toolchain/arm-none-eabi/arm-none-eabi/include"
+
+tee compile_commands.json <<EOF
+[
+	{
+		"directory": "$PWD",
+		"arguments": [
+			"gcc",
+			"-I$armIncludes",
+			"-I$platformIncludes",
+			"-Ibuild/include/",
+			"-Iinclude/",
+			"-Ibuild/{{ usage.platform }}/"
+		],
+		"file": "*.*"
+	}
+]
+EOF
+"""
